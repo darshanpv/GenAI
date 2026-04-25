@@ -2,26 +2,19 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 from pathlib import Path
+from utils.pushover_utils import send_push
+from utils.logger import get_logger
+from config.app_config import AppConfig
 
-# Get project root (parent of current file's folder)
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load .env
-load_dotenv(dotenv_path="../../.env")
-
+logger = get_logger(__name__, AppConfig.LOG_LEVEL)
 # Read config
-#API_KEY = os.getenv("GITHUB_API_KEY")
-#BASE_URL = os.getenv("GITHUB_BASE_URL")
-#MODEL = os.getenv("GITHUB_MODEL_NAME")
+API_KEY = AppConfig.GITHUB_API_KEY
+BASE_URL = AppConfig.GITHUB_BASE_URL
+MODEL = AppConfig.GITHUB_MODEL_NAME
 
-API_KEY = os.getenv("LLAMA_API_KEY")
-BASE_URL = os.getenv("LLAMA_BASE_URL")
-MODEL = os.getenv("LLAMA_MODEL_NAME")
-
-
-print("API_KEY loaded:", API_KEY is not None)
-print("BASE_URL:", BASE_URL)
-print("MODEL:", MODEL)
+#API_KEY = AppConfig.LLAMA_API_KEY
+#BASE_URL = AppConfig.LLAMA_BASE_URL
+#MODEL = AppConfig.LLAMA_MODEL_NAME
 
 # Create client
 client = OpenAI(
@@ -38,35 +31,30 @@ def chat(prompt):
         ],
         temperature=0.7
     )
-    print("\n==== RAW RESPONSE ====")
     try:
-        print(response.model_dump_json(indent=2))
-    except Exception:
-        print(response)
+        logger.debug(response.model_dump_json(indent=2))
+    except Exception as e:
+        logger.error(f"Error occurred while dumping response: {e}")
 
     # SAFE EXTRACTION
-    print("\n==== PARSED FIELDS ====")
-    print("choices:", getattr(response, "choices", None))
+    logger.debug(f"Raw response object: {response}")
 
     if response.choices:
         msg = response.choices[0].message
-        print("message object:", msg)
-        print("content:", getattr(msg, "content", None))
     else:
-        print("No choices returned!")
-
-    print("======================\n")
-
+        logger.debug("No choices returned!")
+        return None
     # safer return
     try:
         return response.choices[0].message.content
     except Exception as e:
-        print("Error extracting content:", e)
+        logger.error(f"Error extracting content: {e}")
         return None
 
 # Run example
 if __name__ == "__main__":
-    user_input = "Explain fibonaci series in simple terms"
+    user_input = "What is the capital of France?"
     reply = chat(user_input)
-    print("User:", user_input)
-    print("AI:", reply)
+    logger.info(f"User: {user_input}")
+    logger.info(f"Assistant: {reply}")
+    #send_push("Hello from the GitHub API client!", title="GitHub Client Test")
