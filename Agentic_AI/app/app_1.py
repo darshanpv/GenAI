@@ -51,10 +51,17 @@ def chat(prompt):
         logger.error(f"Error extracting content: {e}")
         return None
 
-# Run example
-if __name__ == "__main__":
+def test_chat():
     user_input = "What is the capital of France?"
     reply = chat(user_input)
     logger.info(f"User: {user_input}")
     logger.info(f"Assistant: {reply}")
-    #send_push("Hello from the GitHub API client!", title="GitHub Client Test")
+
+def push_notification_test():
+    send_push("Hello from the GitHub API client!", title="GitHub Client Test")
+
+# Run example
+if __name__ == "__main__":
+    test_chat()
+    #push_notification_test()
+    
